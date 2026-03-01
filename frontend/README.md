@@ -1,4 +1,3 @@
-# Habit Tracker – Application de gestion d'habitudes
 
 Application web fullstack permettant de suivre ses habitudes quotidiennes de façon simple et motivante.
 
