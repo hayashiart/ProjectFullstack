@@ -18,15 +18,7 @@ use ApiPlatform\Metadata\Query\GetCollection as GetCollectionQuery;
 
 #[ApiResource(
     operations: [
-        new GetCollection(
-            security: "is_granted('ROLE_USER')",
-            // Filtre pour ne retourner QUE les habitudes de l'utilisateur connecté
-            query: new GetCollectionQuery(
-                filters: ['api_platform.doctrine.orm.search_filter'],
-                // On force le filtre user == current user
-                extraProperties: ['filters' => ['user.id' => 'user.id']]
-            )
-        ),
+        new GetCollection(security: "is_granted('ROLE_USER')"),
         new Get(security: "is_granted('ROLE_USER') and object.user == user"),
         new Post(security: "is_granted('ROLE_USER')"),
         new Put(security: "is_granted('ROLE_USER') and object.user == user"),

@@ -1,0 +1,33 @@
+<?php
+// src/State/HabitCollectionExtension.php
+namespace App\State;
+
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\ProviderInterface;
+use App\Entity\Habit;
+use Doctrine\ORM\QueryBuilder;
+use Symfony\Bundle\SecurityBundle\Security;
+
+final class HabitCollectionExtension implements ProviderInterface
+{
+    public function __construct(
+        private readonly ProviderInterface $decorated,
+        private readonly Security $security
+    ) {
+    }
+
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
+    {
+        $data = $this->decorated->provide($operation, $uriVariables, $context);
+
+        if (!$data instanceof QueryBuilder || !$this->security->getUser()) {
+            return $data;
+        }
+
+        $user = $this->security->getUser();
+        $data->andWhere($data->expr()->eq('o.user', ':user'))
+             ->setParameter('user', $user);
+
+        return $data;
+    }
+}
