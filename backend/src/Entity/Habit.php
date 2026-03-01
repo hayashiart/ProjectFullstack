@@ -7,7 +7,33 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\Query\GetCollection as GetCollectionQuery;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            security: "is_granted('ROLE_USER')",
+            // Filtre pour ne retourner QUE les habitudes de l'utilisateur connecté
+            query: new GetCollectionQuery(
+                filters: ['api_platform.doctrine.orm.search_filter'],
+                // On force le filtre user == current user
+                extraProperties: ['filters' => ['user.id' => 'user.id']]
+            )
+        ),
+        new Get(security: "is_granted('ROLE_USER') and object.user == user"),
+        new Post(security: "is_granted('ROLE_USER')"),
+        new Put(security: "is_granted('ROLE_USER') and object.user == user"),
+        new Delete(security: "is_granted('ROLE_USER') and object.user == user"),
+    ],
+    filters: ['api_platform.doctrine.orm.search_filter']
+)]
 #[ORM\Entity(repositoryClass: HabitRepository::class)]
 class Habit
 {

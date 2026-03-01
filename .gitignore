@@ -1,0 +1,9 @@
+# À la racine
+**/vendor/
+**/node_modules/
+**/.env.local
+**/.env.test.local
+**/var/
+**/.idea/
+**/build/
+**/dist/
