@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
@@ -8,32 +7,91 @@ export default function Dashboard() {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState('');
 
-  useEffect(() => {
-    const fetchHabits = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/my-habits', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          },
-        });
+  // Fonction fetchHabits accessible partout
+  const fetchHabits = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:8000/api/my-habits', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
 
-        if (!response.ok) {
-          throw new Error(`Erreur ${response.status}: ${await response.text()}`);
-        }
-
-        const data = await response.json();
-        setHabits(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Erreur ${response.status}: ${errText}`);
       }
-    };
 
+      const data = await response.json();
+      setHabits(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger au montage + quand token change
+  useEffect(() => {
     if (token) fetchHabits();
   }, [token]);
+
+  const handleComplete = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/habits/${id}/complete`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: 'Réponse invalide du serveur' };
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || `Erreur ${res.status}`);
+      }
+
+      setSuccessMsg('Journée marquée !');
+      setTimeout(() => setSuccessMsg(''), 3000);
+      fetchHabits();
+    } catch (err) {
+      setError('Erreur : ' + err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Supprimer cette habitude ?')) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/habits/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: 'Réponse invalide du serveur' };
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || `Erreur ${res.status}`);
+      }
+
+      setSuccessMsg('Habitude supprimée');
+      setTimeout(() => setSuccessMsg(''), 3000);
+      fetchHabits();
+    } catch (err) {
+      setError('Erreur : ' + err.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -44,12 +102,19 @@ export default function Dashboard() {
               Mes habitudes
             </h1>
             <Link
-              to="/habits/new"  // On créera cette page juste après
+              to="/habits/new"
               className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
             >
               + Nouvelle habitude
             </Link>
           </div>
+
+          {/* Messages de succès */}
+          {successMsg && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-center">
+              {successMsg}
+            </div>
+          )}
 
           {loading && <p className="text-center text-gray-600">Chargement de tes habitudes...</p>}
           {error && <p className="text-red-600 text-center">{error}</p>}
@@ -64,12 +129,31 @@ export default function Dashboard() {
                 habits.map(habit => (
                   <div key={habit.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
                     <h3 className="text-xl font-semibold text-gray-800 mb-2">{habit.name}</h3>
+                    
                     {habit.description && (
                       <p className="text-gray-600 mb-4">{habit.description}</p>
                     )}
-                    <p className="text-sm text-gray-500">
+                    
+                    <p className="text-sm text-gray-500 mb-4">
                       Créée le {new Date(habit.createdAt).toLocaleDateString('fr-FR')}
                     </p>
+
+                    {/* Boutons d'actions */}
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        onClick={() => handleComplete(habit.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white text-sm py-2 px-4 rounded transition-colors"
+                      >
+                        Aujourd’hui fait
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(habit.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-4 rounded transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import HabitNew from './pages/HabitNew';
+import HabitEdit from './pages/HabitEdit';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/habits/new" element={<HabitNew />} />
+        <Route path="/habits/:id/edit" element={<HabitEdit />} />
         
         {/* Routes protégées */}
         <Route element={<ProtectedRoute />}>
