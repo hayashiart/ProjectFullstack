@@ -36,7 +36,6 @@ Application web fullstack pour suivre et gérer ses habitudes quotidiennes de fa
 
 ### 1. Cloner le dépôt
 
-```bash
 git clone https://github.com/hayashiart/ProjectFullstack.git
 cd ProjectFullstack
 2. Backend (Symfony API)
